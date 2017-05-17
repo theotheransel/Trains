@@ -6,16 +6,10 @@
     </head>
     <body>
         <?php
-        /*PART II: variant TrainCar types
-        My solution the problem of specific types of TrainCar is to use an
-        abstract class for the generic case. All types of Train car 
-         such as FreightCars, PassengerCars, etc inherit the properties and methods of
-         the abstract base class.  */
-        
         class Train {            
             private $carsInTrain = [];
             
-            function addCarToEnd($carName) {
+            public function addCarToEnd($carName) {
                 if ($this->getNumberOfCars() > 29) {
                     echo  'There are too many cars on this train to add another';
                 }
@@ -23,7 +17,7 @@
                     array_push($this->carsInTrain, $carName);
                 }
             }
-            function addCarToFront($carName) {
+            public function addCarToFront($carName) {
                 if ($this->getNumberOfCars() > 29) {
                     echo 'There are too many cars on this train to add another';
                 }
@@ -31,7 +25,7 @@
                     array_unshift($this->carsInTrain, $carName);
                 }
             }
-            function removeCarFromFront() {
+            public function removeCarFromFront() {
                 if ($this->getNumberOfCars() === 0) {
                     echo 'There is no car here to remove.';
                 }
@@ -39,7 +33,7 @@
                     array_shift($this->carsInTrain);
                 }
             }
-            function removeCarFromEnd() {
+            public function removeCarFromEnd() {
                 if ($this->getNumberOfCars() === 0) {
                     echo 'There is no car here to remove.';
                 }
@@ -54,20 +48,30 @@
                 }
                 else {
                     return $this->carsInTrain[$positionOfCar];
-                }      
+                }               
             }
-                        
-            function getNumberOfCars() {
+            /* allows access to the public functions of a TrainCar by its
+             * position in $carsInTrain
+             */                        
+             public function getNumberOfCars() {
                 $numberOfCars = count($this->carsInTrain);
                 return $numberOfCars;
             }
+            
+            public function getWeightOfTrain() {
+                $weight = 0;
+                for ($carIndex = 0; $carIndex < $this->getNumberOfCars(); $carIndex++) {
+                    $weight += $this->accessCarInTrain($carIndex)->getCarWeight();
+                }
+                return $weight;
+            }
         }
         
-        abstract class TrainCar {
+        
+        class TrainCar {
 
             protected $name = '';
             protected $weightInTons = null;
-            protected $typeOfCar = 'Generic';
             function __construct($weightValueInTons, $carName) {
                 if (($weightValueInTons <= 0) || ($carName === '')) {
                     echo 'New cars must have a weight value greater than zero and a non-empty name.';
@@ -75,10 +79,13 @@
                 else {
                     $this->weightInTons = $weightValueInTons;
                     $this->name = $carName;
+                }                
+            }           
+            public function setCarWeight($newWeightValue) {
+                if ($newWeightValue <= 0) {
+                    echo 'The weight of a car must be greater than zero.';
                 }
-            }            
-            protected function setCarWeight($newWeightValue) {
-                $this->weightInTons = $newWeightValue;                          
+                $this->weightInTons = $newWeightValue;            
             }
             public function getCarWeight() {
                 if ($this->weightInTons === null) {
@@ -93,55 +100,35 @@
                 }
                 return $this->name;
             }
-            public function getCarType() {
-                return $this->typeOfCar;
-            }
-            // I add a function to get the type of TrainCar that this is
+
         }
         
-        class FreightCar extends TrainCar {
-            protected $typeOfCar = 'Freight Car';
-            private $cargo = [];
-            //adding a new property to this version of TrainCar
-            public function __construct($weightValueInTons, $carName) {
-                parent::__construct($weightValueInTons, $carName);
-            }
-            public function addToCargo($cargo) {
-                array_push($this->cargo, $cargo);
-            }
-            public function getCargo() {
-                return $this->cargo;
-            }            
-        }
         
         $testTrain = new Train();
         $testTrain->removeCarFromFront();
-        $weightOfTrain = 0;
-            for ($car = 0; $car < 30; $car++) {               
-                $weight = 40 - $car;
-                $Cars[$car] = new FreightCar($weight, "Freight Car {$car}");
+        //demonstrates the error that occurs if there are no cars to remove.
+            for ($car = 0; $car < 30; $car++) {    //initializing TrainCars          
+                $weight = 40 - $car; //with a variety of weights
+                $Cars[$car] = new TrainCar($weight, "Car {$car}");
                 $testTrain->addCarToEnd($Cars[$car]);
-                $weightOfTrain += $weight;
             }
         echo "<br>";    
         echo 'The number of cars is: ' . $testTrain->getNumberOfCars() . "<br>";
         echo $testTrain->accessCarInTrain(0)->getCarName() . ', ';
         echo 'weighing ' . $testTrain->accessCarInTrain(0)->getCarWeight() . ' tons. ';
-        echo 'The total weight is:' . $weightOfTrain . ' tons.';
+        //name and weight of the the first car on the train and:        
+        echo 'The total weight is:' . $testTrain->getWeightOfTrain() . ' tons.';
+        //the current weight of the the train.
         echo "<br>";
-        $weightOfTrain -= $testTrain->accessCarInTrain(0)->getCarWeight();
         $testTrain->removeCarFromFront();
-        $weightOfTrain -= $testTrain->accessCarInTrain(28)->getCarWeight();
         $testTrain->removeCarFromEnd();
         echo $testTrain->accessCarInTrain(0)->getCarName() . ', ';
         echo 'weighing ' . $testTrain->accessCarInTrain(0)->getCarWeight() . ' tons.';
-        echo 'The total weight is:' . $weightOfTrain . ' tons.' . "<br>";
+        /*the index of each car has been updated by array_shift
+        the name of the car stays the same, so in this case the car at index 0 is named
+        "Car 1"*/
+        echo 'The total weight is:' . $testTrain->getWeightOfTrain() . ' tons.' . "<br>";
         echo 'The number of cars is: ' . $testTrain->getNumberOfCars() . "<br>";
-        
-        /* The test example, only modified to instantiate instances of FreightCar rather than TrainCar,
-         * produces the same result as in Part I. Cargo can be added to instances of FreightCar by position in
-         *  the variable array $Cars[], or by using the Train's accessCarInTrain() function.
-         */
         ?>
     </body>
 </html>
